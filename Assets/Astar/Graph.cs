@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -33,7 +34,10 @@ namespace Astar
         public List<Vector2> Path(Vector2 worldStartPosition, Vector2 worldEndPosition)
         {
             _pathTravel = 0;
-            AddObstacle(0, 1);
+            AddObstacle(-6, -4);
+            AddObstacle(-3, -2);
+        
+            
             var gridStartPosition = ConvertWorldPositionToGridPosition((int)worldStartPosition.x, (int)worldStartPosition.y);
             var startNode = _grid[(int)gridStartPosition.x][(int)gridStartPosition.y];
             List<Vector2> path = FindPath(startNode, worldEndPosition);
@@ -95,20 +99,42 @@ namespace Astar
                     }
                 }
             }
-            
-            _linkCosts[0][1] = 999;
         }
         
-        private void AddObstacle(int worldX, int worldY)
+        public void AddObstacle(int worldX, int worldY)
         {
             var gridPosition = ConvertWorldPositionToGridPosition(worldX, worldY);
             var gridX = (int)gridPosition.x;
             var gridY = (int)gridPosition.y;
-            
-            // print(gridX + " " + gridY);
-            
-            // a implémenter
+
+            // Sécurité de base : si l'obstacle lui-même est hors map, on arrête tout
+            if (gridX < 0 || gridX >= gridXSize || gridY < 0 || gridY >= gridYSize) return;
+
+            for (int k = 0; k < _neighborDirections.Length; k++)
+            {
+                var (i, j) = _neighborDirections[k];
+
+                // --- 1. Bloquer la sortie (Du centre VERS le voisin) ---
+                var neighborXOut = gridX + i;
+                var neighborYOut = gridY + j;
+
+                if (neighborXOut >= 0 && neighborXOut < gridXSize && neighborYOut >= 0 && neighborYOut < gridYSize)
+                {
+                    _linkCosts[gridX * gridYSize + gridY][k] = 99;
+                }
+                
+                // --- 2. Bloquer la sortie (Du voisin VERS le centre) ---
+                var neighborXIn = gridX - i;
+                var neighborYIn = gridY - j;
+
+                if (neighborXIn >= 0 && neighborXIn < gridXSize && neighborYIn >= 0 && neighborYIn < gridYSize)
+                {
+                    // On modifie le coût du voisin pour qu'il ne puisse pas entrer dans l'obstacle
+                    _linkCosts[neighborXIn * gridYSize + neighborYIn][k] = 99;
+                }
+            }
         }
+        
         
         private Vector2 ConvertWorldPositionToGridPosition(int worldX, int worldY)
         {
@@ -173,12 +199,13 @@ namespace Astar
         
           private void OnDrawGizmos()
         {
+            
             // Ensure grid exists in editor
             if (_grid == null || _grid.Count != gridXSize || _grid[0].Count != gridYSize)
             {
                 CreateGrid();
             }
-
+            
             var prevColor = Gizmos.color;
 
             if (!drawGrid)
@@ -222,18 +249,21 @@ namespace Astar
 
                             var cost = _linkCosts[node.GridX * gridYSize + node.GridY][i];
                             // print(i + " " + cost);
-                            
-                            
+
                             
                             if (cost > 1)
                             {
                                 Gizmos.color = blockedLinkColor;
-                            } else if (cost == 1)
+                                Gizmos.DrawLine(pos, npos);
+                            } else 
                             {
                                 Gizmos.color = linkColor;
                             }
                             
-                            Gizmos.DrawLine(pos, npos);
+                            
+                            
+                            
+                            
                         }
                     }
                 }

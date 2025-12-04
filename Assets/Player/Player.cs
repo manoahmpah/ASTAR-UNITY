@@ -12,6 +12,7 @@ namespace Player
 
         void Start()
         {
+            
             Vector2 worldStartPosition = new Vector2(transform.position.x, transform.position.y);
             
             List<Vector2> path = graph.Path(worldStartPosition, worldEndPosition);
@@ -22,6 +23,7 @@ namespace Player
                 // MODIFICATION 1 : On lance la méthode Move comme une Coroutine
                 StartCoroutine(MoveSequence(path));
             }
+            
         }
 
         // MODIFICATION 2 : Move devient une Coroutine (IEnumerator)
